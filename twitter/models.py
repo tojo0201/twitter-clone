@@ -18,3 +18,14 @@ class Tweet(models.Model):
 
     def __str__(self):
         return self.tweet_text
+
+class Follow(models.Model):
+    #ユーザ情報
+    user =  models.ForeignKey(User, related_name='used_user', on_delete=models.CASCADE)
+    #フォローしている人情報（一つ目はうまくいかない）
+#    followed_user =  models.ForeignKey(User, related_name='followed_user', on_delete=models.CASCADE)
+    followed_user = models.IntegerField()
+    created_time = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.user
