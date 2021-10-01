@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .models import Tweet,Follow
+from .models import Tweet,Follow,FavoriteTweet
 from .forms import TweetForm
 
 # Create your views here.
@@ -48,6 +48,31 @@ def follow_deleted(request, other_user_id):
     other_user = User.objects.get(id=other_user_id)
     follow = Follow.objects.filter(user=request.user, followed_user=other_user_id)
     follow.delete()
+    return redirect(request.META.get('HTTP_REFERER'))
+
+#お気に入り一覧
+def favorite_list(request):
+    favorite_tweet_list = FavoriteTweet.objects.filter(user=request.user).values_list('tweet', flat=True)
+    tweet_list = Tweet.objects.filter(id__in=favorite_tweet_list)
+    tweet_list = tweet_list.order_by('created_time').reverse()[:20]
+    return render(request, 'twitter/favorite.html', {'tweet_list': tweet_list})
+
+#お気に入り追加機能
+def add_favorite(request, favorite_tweet_id):
+    favorite_tweet = Tweet.objects.get(id=favorite_tweet_id)
+    tweet, created = FavoriteTweet.objects.get_or_create(
+        user=request.user,
+        tweet=favorite_tweet
+        )
+    if created is True:
+        tweet.save()
+    return redirect(request.META.get('HTTP_REFERER'))
+
+#お気に入り削除機能
+def del_favorite(request, favorite_tweet_id):
+    favorite_tweet = Tweet.objects.get(id=favorite_tweet_id)
+    tweet = FavoriteTweet.objects.filter(user=request.user, tweet=favorite_tweet)
+    tweet.delete()
     return redirect(request.META.get('HTTP_REFERER'))
 
 #ツイート処理
